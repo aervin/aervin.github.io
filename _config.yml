@@ -1,7 +1,7 @@
 # Site settings
 title: Aaron Ervin
 description: 'Aaron Ervin -- web dev && chain smoker'
-url: 'http://aervin.github.io'
+url: 'https://aervin.github.io'
 baseurl: '/ae'
 # google_analytics: 'UA-XXXXXX-X'
 # disqus_shortname: 'your-disqus-name'
