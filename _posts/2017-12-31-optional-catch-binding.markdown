@@ -5,7 +5,7 @@ categories: [javascript]
 tags: [thoughts, technology, typescript, tc39, esnext, try, catch, javascript]
 ---
 
-It's been [proposed][PROPOSAL] that the `catch` portion of the Javascript `try`/`catch` statament no longer require a binding to the runtime `Error` object.
+It's been [proposed][PROPOSAL] that the `catch` portion of the Javascript `try`/`catch` statement no longer require a binding to the runtime `Error` object.
 
 Instead of this
 ```js
