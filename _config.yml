@@ -25,6 +25,7 @@ destination: _site
 paginate: 10
 permalink: /:year/:title/
 markdown: kramdown
+remote-theme: jekyll-uno
 highlighter: rouge
 
 sass:
