@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -73,9 +74,17 @@
                 border-top: 3px solid transparent;
                 display: flex;
                 flex-direction: column;
-                margin: 6px;
-                padding-top: 8px;
+                margin: 14px 6px 6px;
                 width: 56px;
+            }
+
+            .wrapper_sound:nth-of-type(4n+1) {
+                border-right: 1px dashed rgba(94,94,94,.7);
+                padding-right: 12px;
+            }
+
+            .wrapper_sound:last-of-type {
+                border-right: 1px solid transparent;
             }
 
             .wrapper_sound.active {
@@ -100,6 +109,8 @@
                 <button id="stop" class="error">STOP</button>
             </div>
             <div class="wrapper_config">
+                <span>master vol:</span>
+                <input id="master" max="1" min="0.01" step="0.01" type="range">
                 <span>bpm:</span>
                 <input id="bpm" max="240" min="1" step="5" type="range">
                 <span>wave:</span>
@@ -109,6 +120,8 @@
                     <option value="sawtooth">sawtooth</option>
                     <option value="square">square</option>
                 </select>
+                <span>gain:</span>
+                <input id="gain" max="1" min="0.01" step="0.01" type="range">
                 <span>decay:</span>
                 <input id="decay" max="10" min="1" step="1" type="range">
             </div>
@@ -131,104 +144,93 @@
             </div>
         </div>
         <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                function SongPlayer(sequenceLength = 8) {
+            document.addEventListener('DOMContentLoaded', ()=>{
+                function SongPlayer(sequenceLength=8) {
                     return {
                         index: 0,
-                        audioCtx: new AudioContext(),
+                        audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
                         bpm: 120,
                         sequenceLength,
-                        type: "sine",
+                        type: 'sine',
                         decay: 5,
+                        gain: 0.5,
+                        master: 0.5,
                         hasPlayback: false,
                         soundElements: undefined,
                         initDom() {
-                            const root = document.getElementById("SEQUENCER");
+                            const root = document.getElementById('SEQUENCER');
                             for (let i = 0; i < this.sequenceLength; i++) {
                                 const sound = `
-                                        <div index="${i}" class="wrapper_sound">
-                                            <button note="C" freq="523.25" class="button_note"></button>  
-                                            <button note="B" freq="493.88" class="button_note"></button>
-                                            <button note="Bb" freq="466.16" class="button_note"></button> 
-                                            <button note="A" freq="440" class="button_note"></button>
-                                            <button note="G#" freq="415.3" class="button_note"></button>  
-                                            <button note="G" freq="392" class="button_note"></button>
-                                            <button note="F#" freq="369.99" class="button_note"></button>
-                                            <button note="F" freq="349.23" class="button_note"></button>
-                                            <button note="E" freq="329.63" class="button_note"></button>
-                                            <button note="Eb" freq="311.13" class="button_note"></button>
-                                            <button note="D" freq="293.66" class="button_note"></button>
-                                            <button note="C#" freq="277.18" class="button_note"></button>
-                                            <button note="C" freq="261.63" class="button_note"></button>  
-                                        </div>
-                                    `;
+                                    <div index="${i}" class="wrapper_sound">
+                                        <button note="C" freq="523.25" class="button_note"></button>  
+                                        <button note="B" freq="493.88" class="button_note"></button>
+                                        <button note="Bb" freq="466.16" class="button_note"></button> 
+                                        <button note="A" freq="440" class="button_note"></button>
+                                        <button note="G#" freq="415.3" class="button_note"></button>  
+                                        <button note="G" freq="392" class="button_note"></button>
+                                        <button note="F#" freq="369.99" class="button_note"></button>
+                                        <button note="F" freq="349.23" class="button_note"></button>
+                                        <button note="E" freq="329.63" class="button_note"></button>
+                                        <button note="Eb" freq="311.13" class="button_note"></button>
+                                        <button note="D" freq="293.66" class="button_note"></button>
+                                        <button note="C#" freq="277.18" class="button_note"></button>
+                                        <button note="C" freq="261.63" class="button_note"></button>  
+                                    </div>
+                                `;
                                 root.innerHTML = root.innerHTML + sound;
                             }
-                            this.soundElements = Array.from(
-                                document.querySelectorAll(".wrapper_sound"),
-                            ).map(soundEl => {
+                            this.soundElements = Array.from(document.querySelectorAll('.wrapper_sound')).map(soundEl=>{
                                 soundEl.onclick = function(event) {
-                                    event.target.classList.contains("selected")
-                                        ? event.target.classList.remove("selected")
-                                        : event.target.classList.add("selected");
-                                };
+                                    event.target.classList.contains('selected') ? event.target.classList.remove('selected') : event.target.classList.add('selected');
+                                }
                                 return soundEl;
-                            });
+                            }
+                            )
+
                         },
                         nextSound() {
                             this.hasPlayback = true;
                             const nextSound = {
                                 index: this.index,
-                                element: this.soundElements[this.index],
+                                element: this.soundElements[this.index]
                             };
-                            this.index =
-                                this.index === Array.from(this.soundElements).length - 1
-                                    ? 0
-                                    : this.index + 1;
+                            this.index = this.index === Array.from(this.soundElements).length - 1 ? 0 : this.index + 1;
                             return nextSound;
                         },
                         playNextSound() {
                             const sound = this.nextSound();
                             for (const el of this.soundElements) {
-                                el.classList.remove("active");
+                                el.classList.remove('active');
                                 for (const note of el.children) {
-                                    note.classList.remove("active-note");
+                                    note.classList.remove('active-note');
                                 }
                             }
 
-                            sound.element.classList.add("active");
+                            sound.element.classList.add('active');
                             const noteElements = sound.element.children;
-                            const selectedElements = Array.from(noteElements).filter(e =>
-                                e.classList.contains("selected"),
-                            );
+                            const selectedElements = Array.from(noteElements).filter(e=>e.classList.contains('selected'));
                             for (const el of selectedElements) {
-                                el.classList.add("active-note");
-                                const freq = Array.from(el.attributes).find(
-                                    a => a.name === "freq",
-                                ).nodeValue;
-                                const osc = this.audioCtx.createOscillator();
-                                osc.type = this.type;
-                                osc.frequency.setValueAtTime(
-                                    freq,
-                                    this.audioCtx.currentTime,
-                                );
+                                el.classList.add('active-note');
+                                const freq = Array.from(el.attributes).find(a=>a.name === 'freq').nodeValue;
+                                const oscNode = this.audioCtx.createOscillator();
                                 const gainNode = this.audioCtx.createGain();
-                                osc.connect(gainNode);
-                                gainNode.gain.setValueAtTime(
-                                    0.3,
-                                    this.audioCtx.currentTime,
-                                );
-                                gainNode.connect(this.audioCtx.destination);
-                                osc.start();
-                                gainNode.gain.exponentialRampToValueAtTime(
-                                    0.00001,
-                                    this.audioCtx.currentTime + this.decay,
-                                );
+                                const masterNode = this.audioCtx.createGain();
+                                oscNode.type = this.type;
+                                oscNode.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                                oscNode.connect(gainNode);
+                                gainNode.connect(masterNode);
+                                masterNode.connect(this.audioCtx.destination);
+                                gainNode.gain.setValueAtTime(this.gain, this.audioCtx.currentTime);
+                                masterNode.gain.setValueAtTime(this.master, this.audioCtx.currentTime);
+                                oscNode.start();
+                                gainNode.gain.exponentialRampToValueAtTime(0.00001, this.audioCtx.currentTime + this.decay);
+                                gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime + this.decay + .001);
+                                oscNode.stop(this.audioCtx.currentTime + this.decay);
                             }
                         },
                         stop() {
                             this.hasPlayback = false;
-                        },
+                        }
                     };
                 }
 
@@ -236,39 +238,52 @@
                 document.player.initDom();
 
                 let playback = -1;
-                const playButton = document.getElementById("play");
-                const stopButton = document.getElementById("stop");
-                const typeDropdown = document.getElementById("type");
-                const decaySlider = document.getElementById("decay");
-                const bpmSlider = document.getElementById("bpm");
+                const masterSlider = document.getElementById('master');
+                const playButton = document.getElementById('play');
+                const stopButton = document.getElementById('stop');
+                const typeDropdown = document.getElementById('type');
+                const decaySlider = document.getElementById('decay');
+                const bpmSlider = document.getElementById('bpm');
+                const gainSlider = document.getElementById('gain');
                 playButton.onclick = function(event) {
                     if (!document.player.hasPlayback) {
                         document.player.playNextSound();
-                        playback = setInterval(
-                            () => document.player.playNextSound(),
-                            60000 / document.player.bpm / 2,
-                        );
+                        playback = setInterval(()=>document.player.playNextSound(), (60000 / document.player.bpm) / 2);
                     }
-                };
+                }
                 stopButton.onclick = function(event) {
                     document.player.stop();
                     clearInterval(playback);
                     playback = -1;
-                };
+                }
 
                 typeDropdown.onchange = function(event) {
+                    stopButton.click();
                     document.player.type = event.target.selectedOptions[0].value;
-                };
+                    playButton.click();
+                }
                 decaySlider.onchange = function(event) {
+                    stopButton.click();
                     document.player.decay = parseInt(event.target.value);
-                    console.log(document.player);
-                };
+                    playButton.click();
+                }
                 bpmSlider.onchange = function(event) {
                     stopButton.click();
                     document.player.bpm = parseInt(event.target.value);
                     playButton.click();
-                };
-            });
+                }
+                gainSlider.onchange = function(event) {
+                    stopButton.click();
+                    document.player.gain = parseFloat(event.target.value);
+                    playButton.click();
+                }
+                masterSlider.onchange = function(event) {
+                    stopButton.click();
+                    document.player.master = parseFloat(event.target.value);
+                    playButton.click();
+                }
+            }
+            );
         </script>
     </body>
 </html>
